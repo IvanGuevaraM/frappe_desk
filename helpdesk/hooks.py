@@ -22,10 +22,6 @@ add_to_apps_screen = [
 get_site_info = "helpdesk.activation.get_site_info"
 
 after_install = "helpdesk.setup.install.after_install"
-after_migrate = [
-    "helpdesk.search.build_index_in_background",
-    "helpdesk.search.download_corpus",
-]
 
 # Full Text Search
 # ------------------
@@ -33,10 +29,6 @@ after_migrate = [
 sqlite_search = ["helpdesk.search_sqlite.HelpdeskSearch"]
 
 scheduler_events = {
-    "all": [
-        "helpdesk.search.build_index_if_not_exists",
-        "helpdesk.search.download_corpus",
-    ],
     "daily": [
         "helpdesk.helpdesk.doctype.hd_ticket.hd_ticket.close_tickets_after_n_days"
     ],

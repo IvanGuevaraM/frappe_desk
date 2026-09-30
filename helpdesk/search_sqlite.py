@@ -235,6 +235,7 @@ class HelpdeskSearch(SQLiteSearch):
         }
 
 
+@frappe.whitelist()
 def build_index():
     """Build search index - can be called from console."""
     search = HelpdeskSearch()

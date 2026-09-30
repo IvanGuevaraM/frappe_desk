@@ -1,9 +1,11 @@
+from unittest import TestCase
 from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from helpdesk.search_sqlite import HelpdeskSearch
+from helpdesk import hooks
+from helpdesk.search_sqlite import HelpdeskSearch, build_index
 from helpdesk.test_utils import create_user, make_ticket
 
 RESTRICTED_USER = "helpdesk-search-user@example.com"
@@ -67,3 +69,26 @@ class TestSearchPermissionFilter(FrappeTestCase):
         self.assertEqual(
             set(options), {"teams", "statuses", "priorities", "customers", "doctypes"}
         )
+
+
+class TestSearchLifecycle(TestCase):
+    def test_hooks_delegate_index_lifecycle_to_frappe_sqlite_search(self):
+        self.assertEqual(
+            hooks.sqlite_search, ["helpdesk.search_sqlite.HelpdeskSearch"]
+        )
+        configured_events = {
+            event
+            for events in hooks.scheduler_events.values()
+            for event in events
+        }
+        self.assertFalse(
+            any(event.startswith("helpdesk.search.") for event in configured_events)
+        )
+        self.assertFalse(hasattr(hooks, "after_migrate"))
+
+    def test_manual_rebuild_uses_whitelisted_sqlite_builder(self):
+        self.assertIn(build_index, frappe.whitelisted)
+        with patch("helpdesk.search_sqlite.HelpdeskSearch") as search_class:
+            build_index()
+
+        search_class.return_value.build_index.assert_called_once_with()
